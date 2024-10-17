@@ -356,7 +356,7 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     if (Object.keys(this.state.selectedSource).length) {
       const defaultQuery = `?page[number]=${
         currentIndex || this.state.page.currentIndex
-      }&page[size]=18`;
+      }&page[size]=18&filter[origin_path]=assets`; // INKBOX NOTE: Add assets filter to query
 
       const assetObjects = query
         ? await this.getAssetObjects(query, noSearchAssetsError())
@@ -396,6 +396,10 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     }
 
     let _destination, path;
+
+    // INKBOX NOTE: Force destination to be /assets/contentful
+    destination = '/assets/contentful';
+
     if (destination) {
       // strip the leading and trailing slash from destination
       _destination = destination.replace(/^\//, '').replace(/\/$/, '');
@@ -635,10 +639,9 @@ export default class Dialog extends Component<DialogProps, DialogState> {
                         className={
                           this.state.isUploading ? 'ix-input-readonly' : ''
                         }
-                        value={this.state.uploadForm.destination || '/'}
+                        value="/assets/contentful"
                         onChange={this.updateDestinationFilePath}
-                        placeholder="/"
-                        isReadOnly={this.state.isUploading}
+                        isReadOnly={ true }
                       ></TextInput>
                     </div>
                   </form>

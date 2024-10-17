@@ -71,7 +71,7 @@ export default class Field extends Component<FieldProps, FieldState> {
       return;
     }
 
-    const url = new URL(this.state.selectedAsset.src || '');
+    const url = new URL(this.state.selectedAsset.src  ||'');
     const newParams = paramsReducer(url.searchParams, params, action);
     const newURL = `${url.origin}${url.pathname}?${newParams.toString()}`;
 
@@ -98,7 +98,34 @@ export default class Field extends Component<FieldProps, FieldState> {
 
   render() {
     // Uncomment to test
-    // console.log({ ...this.state.selectedAsset });
+    //console.log({ ...this.state.selectedAsset });
+
+    // INKBOX NOTE: Undo all our shenanigans to get the selectedAsset back to the correct shape for the FieldImagePreview component
+
+    // undo the array wrapping
+    //@ts-ignore
+    this.state.selectedAsset = this.state.selectedAsset?.[0];
+
+    // ensure we have the correct src
+    if  (this.state.selectedAsset && !this.state.selectedAsset.src) {
+      //@ts-ignore
+      this.state.selectedAsset.src = this.state.selectedAsset.original_url;
+
+      // get the correct content type by checking the file extension, check if image, video, or other
+      // we are assuming that the content type is image if it doesn't end with .mp4 - not the best way to do this, but it works for now
+      let contentType = "image";
+      if (this.state.selectedAsset.src.endsWith('.mp4')) {
+        contentType = "video";
+      }
+
+      // add the content type to the attributes back
+      this.state.selectedAsset.attributes = {
+        content_type: contentType,
+      }
+    }
+
+    // INKBOX NOTE: End of undoing shenanigans
+
 
     const updateHeightHandler = this.props.sdk.window.updateHeight;
     if (this.state.selectedAsset && this.state.selectedAsset.src) {
