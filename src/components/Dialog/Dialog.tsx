@@ -21,6 +21,7 @@ import {
   noOriginAssetsWebFolderError,
   noSearchAssetsError,
   noSourcesError,
+  fileTooLargeError,
 } from '../../helpers/errors';
 import { AppInstallationParameters } from '../ConfigScreen/';
 import { ImageGallery } from '../Gallery/';
@@ -31,6 +32,10 @@ import packageJson from '../../../package.json';
 import { UploadButton } from '../UploadButton/UploadButton';
 import './Dialog.css';
 import { stringifyJsonFields } from '../../helpers/utils';
+import { Buffer} from "buffer";
+
+// @ts-ignore
+window.Buffer = Buffer;
 
 interface DialogProps {
   sdk: DialogExtensionSDK;
@@ -462,19 +467,43 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     reader.addEventListener(
       'load',
       () => {
-        // convert image file to base64 string
-        const assetBase64String = reader.result as string;
-        const fileString = assetBase64String.replace(
-          /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
-          '',
-        );
-        const buffer = Buffer.from(fileString, 'base64');
-        this.upload(buffer);
+        // Handle Image & Video Uploads
+        if (file?.type.includes('image')) {
+          this.handleImageUpload(reader, file);
+        } else if (file?.type.includes('video')) {
+          this.handleVideoUpload(reader, file);
+        } else {
+          // Error: Unsupported file type
+            console.error('imgix: unsupported file type');
+        }
+
       },
       false,
     );
     reader.readAsDataURL(file as File);
   };
+
+  handleImageUpload = (reader: FileReader, file: File) => {
+    // convert image file to base64 string
+    const assetBase64String = reader.result as string;
+    const fileString = assetBase64String.replace(
+        /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
+        '',
+    );
+    const buffer = Buffer.from(fileString, 'base64');
+    this.upload(buffer);
+  }
+
+  handleVideoUpload = (reader: FileReader, file: File) => {
+    // convert video file to base64 string
+    const assetBase64String = reader.result as string;
+    const fileString = assetBase64String.replace(
+        /^data:video\/mp4;base64,/,
+        '',
+    );
+    const buffer = Buffer.from(fileString, 'base64');
+    this.upload(buffer);
+  }
 
   setIsUploading = (value: boolean) => {
     this.setState({ isUploading: value });
@@ -510,6 +539,16 @@ export default class Dialog extends Component<DialogProps, DialogState> {
   };
 
   openFileForm = (file: File, previewSource: string, showUpload: boolean) => {
+
+    // INKBOX NOTE: Check video file size - we don't want anything larger than 30MB
+    if (file.type.includes('video') && file.size > 30 * 1024 * 1024) {
+      this.setState({
+        errors: [fileTooLargeError()],
+      });
+
+      return;
+    }
+
     const uploadForm = {
       ...this.state.uploadForm,
       file,
@@ -582,6 +621,15 @@ export default class Dialog extends Component<DialogProps, DialogState> {
             </div>
           )}
         </div>
+        {/* { UI Error fallback } */}
+        {this.state.errors.length > 0 && (
+            <Note
+                error={this.state.errors[0]}
+                type={this.state.errors[0].type}
+                resetErrorBoundary={this.resetNErrors}
+                dismissable={this.state.errors[0].dismissable}
+            />
+        )}
         <ImageGallery
           selectedSource={selectedSource}
           sdk={sdk}
@@ -590,15 +638,7 @@ export default class Dialog extends Component<DialogProps, DialogState> {
           assets={assets}
           loading={this.state.loading}
         />
-        {/* { UI Error fallback } */}
-        {this.state.errors.length > 0 && (
-          <Note
-            error={this.state.errors[0]}
-            type={this.state.errors[0].type}
-            resetErrorBoundary={this.resetNErrors}
-            dismissable={this.state.errors[0].dismissable}
-          />
-        )}
+
         {this.state.showUpload && (
           <div className="ix-upload-editor-container">
             <div className="ix-upload-editor">
