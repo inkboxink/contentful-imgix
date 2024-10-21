@@ -53,7 +53,7 @@ export function UploadButton(props: {
         style={{ display: 'none' }}
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*, video/*"
         onChange={handleFileChange}
       />
     </div>
