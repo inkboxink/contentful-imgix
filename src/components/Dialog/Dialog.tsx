@@ -540,8 +540,17 @@ export default class Dialog extends Component<DialogProps, DialogState> {
 
   openFileForm = (file: File, previewSource: string, showUpload: boolean) => {
 
-    // INKBOX NOTE: Check video file size - we don't want anything larger than 30MB
-    if (file.type.includes('video') && file.size > 30 * 1024 * 1024) {
+    // INKBOX NOTE: Check video file size - we don't want anything larger than 50MB
+    if (file.type.includes('video') && file.size > 50 * 1024 * 1024) {
+      this.setState({
+        errors: [fileTooLargeError()],
+      });
+
+      return;
+    }
+    
+    // INKBOX NOTE: Check image file size - we don't want anything larger than 10MB
+    if (file.type.includes('image') && file.size > 10 * 1024 * 1024) {
       this.setState({
         errors: [fileTooLargeError()],
       });
