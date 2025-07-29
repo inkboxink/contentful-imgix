@@ -72,9 +72,7 @@ export class Gallery extends Component<GalleryProps, GalleryState> {
     // INKBOX NOTE: ignore the asset because we need it in our format
     // [ { original_url: url } ]
 
-    this.props.sdk.close([
-      {original_url: selectedAsset.src,}
-    ]);
+    this.props.sdk.close([{ original_url: selectedAsset.src }]);
   };
 
   handleClose = () => {
