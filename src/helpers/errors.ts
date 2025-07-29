@@ -4,7 +4,8 @@ export type ErrorType =
   | `NoSourcesError`
   | `NoOriginAssetsError`
   | `NoOriginAssetsWebFolderError`
-  | `noSearchAssetsError`;
+  | `noSearchAssetsError`
+  | `fileTooLargeError`;
 
 const DASHBOARD_URL = 'https://dashboard.imgix.com';
 const WEBFOLDER_DOCUMENTATION_URL = `https://docs.imgix.com/setup/serving-assets#web-folder`;
@@ -53,6 +54,12 @@ const ERROR_MESSAGES = {
     message: `Consider trying to search for something else.`,
     name: 'No results found',
     type: 'warning',
+    dismissable: true,
+  },
+  fileTooLargeError: {
+    message: `The file you are trying to upload is too large. Please try uploading a smaller file.`,
+    name: 'File too large',
+    type: 'negative',
     dismissable: true,
   }
 } as const;
@@ -106,3 +113,6 @@ export const noOriginAssetsWebFolderError = (message?: string) =>
 
 export const noSearchAssetsError = (message?: string) =>
   new IxError('noSearchAssetsError', message);
+
+export const fileTooLargeError = (message?: string) =>
+    new IxError('fileTooLargeError', message);

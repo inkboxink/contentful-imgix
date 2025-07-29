@@ -1,5 +1,19 @@
 <!-- ix-docs-ignore -->
 
+# Inkbox Fork 
+This fork is to support the legacy app data structure + added support to upload videos.
+
+### Branches
+
+- `main` branch is the original imgix app that we will continue to pull upstream changes from.
+- `inkboxify` branch is the branch that we will use to make changes to the forked app for our use case and data structure.
+
+**NOTE**: Inkbox Devs, please make sure to always create a new branch from `inkboxify` branch and then create a PR to `inkboxify` branch not upstream `main` branch.
+We will break off non-inkbox specific changes into separate branches and PRs to contribute back to the upstream repo.
+
+
+---
+
 ![imgix logo](https://assets.imgix.net/sdk-imgix-logo.svg)
 
 A Contentful app that integrates with imgix's [Asset Manager](https://docs.imgix.com/setup/asset-manager). Browse, search, and insert assets into your content quickly and easily. Simplify your content editing workflow within Contentful and empower your developers with imgix’s powerful image rendering and optimization service.

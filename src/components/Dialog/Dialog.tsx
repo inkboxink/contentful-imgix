@@ -21,6 +21,7 @@ import {
   noOriginAssetsWebFolderError,
   noSearchAssetsError,
   noSourcesError,
+  fileTooLargeError,
 } from '../../helpers/errors';
 import { AppInstallationParameters } from '../ConfigScreen/';
 import { ImageGallery } from '../Gallery/';
@@ -31,6 +32,10 @@ import packageJson from '../../../package.json';
 import { UploadButton } from '../UploadButton/UploadButton';
 import './Dialog.css';
 import { stringifyJsonFields } from '../../helpers/utils';
+import { Buffer } from 'buffer';
+
+// @ts-ignore
+window.Buffer = Buffer;
 
 interface DialogProps {
   sdk: DialogExtensionSDK;
@@ -356,7 +361,7 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     if (Object.keys(this.state.selectedSource).length) {
       const defaultQuery = `?page[number]=${
         currentIndex || this.state.page.currentIndex
-      }&page[size]=18`;
+      }&page[size]=18&filter[origin_path]=assets`; // INKBOX NOTE: Add assets filter to query
 
       const assetObjects = query
         ? await this.getAssetObjects(query, noSearchAssetsError())
@@ -396,6 +401,10 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     }
 
     let _destination, path;
+
+    // INKBOX NOTE: Force destination to be /assets/contentful
+    destination = '/assets/contentful';
+
     if (destination) {
       // strip the leading and trailing slash from destination
       _destination = destination.replace(/^\//, '').replace(/\/$/, '');
@@ -458,18 +467,41 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     reader.addEventListener(
       'load',
       () => {
-        // convert image file to base64 string
-        const assetBase64String = reader.result as string;
-        const fileString = assetBase64String.replace(
-          /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
-          '',
-        );
-        const buffer = Buffer.from(fileString, 'base64');
-        this.upload(buffer);
+        // Handle Image & Video Uploads
+        if (file?.type.includes('image')) {
+          this.handleImageUpload(reader, file);
+        } else if (file?.type.includes('video')) {
+          this.handleVideoUpload(reader, file);
+        } else {
+          // Error: Unsupported file type
+          console.error('imgix: unsupported file type');
+        }
       },
       false,
     );
     reader.readAsDataURL(file as File);
+  };
+
+  handleImageUpload = (reader: FileReader, file: File) => {
+    // convert image file to base64 string
+    const assetBase64String = reader.result as string;
+    const fileString = assetBase64String.replace(
+      /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
+      '',
+    );
+    const buffer = Buffer.from(fileString, 'base64');
+    this.upload(buffer);
+  };
+
+  handleVideoUpload = (reader: FileReader, file: File) => {
+    // convert video file to base64 string
+    const assetBase64String = reader.result as string;
+    const fileString = assetBase64String.replace(
+      /^data:video\/mp4;base64,/,
+      '',
+    );
+    const buffer = Buffer.from(fileString, 'base64');
+    this.upload(buffer);
   };
 
   setIsUploading = (value: boolean) => {
@@ -506,6 +538,25 @@ export default class Dialog extends Component<DialogProps, DialogState> {
   };
 
   openFileForm = (file: File, previewSource: string, showUpload: boolean) => {
+
+    // INKBOX NOTE: Check video file size - we don't want anything larger than 50MB
+    if (file.type.includes('video') && file.size > 50 * 1024 * 1024) {
+      this.setState({
+        errors: [fileTooLargeError()],
+      });
+
+      return;
+    }
+    
+    // INKBOX NOTE: Check image file size - we don't want anything larger than 10MB
+    if (file.type.includes('image') && file.size > 10 * 1024 * 1024) {
+      this.setState({
+        errors: [fileTooLargeError()],
+      });
+
+      return;
+    }
+
     const uploadForm = {
       ...this.state.uploadForm,
       file,
@@ -578,14 +629,6 @@ export default class Dialog extends Component<DialogProps, DialogState> {
             </div>
           )}
         </div>
-        <ImageGallery
-          selectedSource={selectedSource}
-          sdk={sdk}
-          pageInfo={page}
-          changePage={this.debounceHandlePageChange}
-          assets={assets}
-          loading={this.state.loading}
-        />
         {/* { UI Error fallback } */}
         {this.state.errors.length > 0 && (
           <Note
@@ -595,6 +638,14 @@ export default class Dialog extends Component<DialogProps, DialogState> {
             dismissable={this.state.errors[0].dismissable}
           />
         )}
+        <ImageGallery
+          selectedSource={selectedSource}
+          sdk={sdk}
+          pageInfo={page}
+          changePage={this.debounceHandlePageChange}
+          assets={assets}
+          loading={this.state.loading}
+        />
         {this.state.showUpload && (
           <div className="ix-upload-editor-container">
             <div className="ix-upload-editor">
@@ -635,10 +686,9 @@ export default class Dialog extends Component<DialogProps, DialogState> {
                         className={
                           this.state.isUploading ? 'ix-input-readonly' : ''
                         }
-                        value={this.state.uploadForm.destination || '/'}
+                        value="/assets/contentful"
                         onChange={this.updateDestinationFilePath}
-                        placeholder="/"
-                        isReadOnly={this.state.isUploading}
+                        isReadOnly={true}
                       ></TextInput>
                     </div>
                   </form>
