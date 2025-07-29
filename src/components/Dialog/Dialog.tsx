@@ -32,7 +32,7 @@ import packageJson from '../../../package.json';
 import { UploadButton } from '../UploadButton/UploadButton';
 import './Dialog.css';
 import { stringifyJsonFields } from '../../helpers/utils';
-import { Buffer} from "buffer";
+import { Buffer } from 'buffer';
 
 // @ts-ignore
 window.Buffer = Buffer;
@@ -474,9 +474,8 @@ export default class Dialog extends Component<DialogProps, DialogState> {
           this.handleVideoUpload(reader, file);
         } else {
           // Error: Unsupported file type
-            console.error('imgix: unsupported file type');
+          console.error('imgix: unsupported file type');
         }
-
       },
       false,
     );
@@ -487,23 +486,23 @@ export default class Dialog extends Component<DialogProps, DialogState> {
     // convert image file to base64 string
     const assetBase64String = reader.result as string;
     const fileString = assetBase64String.replace(
-        /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
-        '',
+      /^data:image\/gif;base64,|^data:image\/png;base64,|^data:image\/jpeg;base64,|^data:image\/jpg;base64,|^data:image\/bmp;base64,|^data:image\/webp;base64,/,
+      '',
     );
     const buffer = Buffer.from(fileString, 'base64');
     this.upload(buffer);
-  }
+  };
 
   handleVideoUpload = (reader: FileReader, file: File) => {
     // convert video file to base64 string
     const assetBase64String = reader.result as string;
     const fileString = assetBase64String.replace(
-        /^data:video\/mp4;base64,/,
-        '',
+      /^data:video\/mp4;base64,/,
+      '',
     );
     const buffer = Buffer.from(fileString, 'base64');
     this.upload(buffer);
-  }
+  };
 
   setIsUploading = (value: boolean) => {
     this.setState({ isUploading: value });
@@ -632,12 +631,12 @@ export default class Dialog extends Component<DialogProps, DialogState> {
         </div>
         {/* { UI Error fallback } */}
         {this.state.errors.length > 0 && (
-            <Note
-                error={this.state.errors[0]}
-                type={this.state.errors[0].type}
-                resetErrorBoundary={this.resetNErrors}
-                dismissable={this.state.errors[0].dismissable}
-            />
+          <Note
+            error={this.state.errors[0]}
+            type={this.state.errors[0].type}
+            resetErrorBoundary={this.resetNErrors}
+            dismissable={this.state.errors[0].dismissable}
+          />
         )}
         <ImageGallery
           selectedSource={selectedSource}
@@ -647,7 +646,6 @@ export default class Dialog extends Component<DialogProps, DialogState> {
           assets={assets}
           loading={this.state.loading}
         />
-
         {this.state.showUpload && (
           <div className="ix-upload-editor-container">
             <div className="ix-upload-editor">
@@ -690,7 +688,7 @@ export default class Dialog extends Component<DialogProps, DialogState> {
                         }
                         value="/assets/contentful"
                         onChange={this.updateDestinationFilePath}
-                        isReadOnly={ true }
+                        isReadOnly={true}
                       ></TextInput>
                     </div>
                   </form>

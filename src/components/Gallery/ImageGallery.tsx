@@ -6,7 +6,6 @@ import { GridImage, GalleryPlaceholder } from './';
 
 import { ActionBar } from '../ActionBar';
 import './ImageGallery.css';
-import { stringifyJsonFields } from '../../helpers/utils';
 
 interface GalleryProps {
   selectedSource: Partial<SourceProps>;
@@ -61,20 +60,10 @@ export class Gallery extends Component<GalleryProps, GalleryState> {
       selectedAsset.attributes.media_height = metadata?.PixelHeight || '';
     }
 
-    const stringifiedAsset = {
-      ...stringifyJsonFields(selectedAsset, [
-        'attributes.custom_fields',
-        'attributes.tags',
-        'attributes.colors.dominant_colors',
-      ]),
-    };
-
     // INKBOX NOTE: ignore the asset because we need it in our format
     // [ { original_url: url } ]
 
-    this.props.sdk.close([
-      {original_url: selectedAsset.src,}
-    ]);
+    this.props.sdk.close([{ original_url: selectedAsset.src }]);
   };
 
   handleClose = () => {
