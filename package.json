@@ -40,7 +40,7 @@
   },
   "scripts": {
     "start": "cross-env BROWSER=none react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && node scripts/version-files.js",
     "test": "react-scripts test",
     "prepare": "react-scripts build",
     "prepublishOnly": "react-scripts build",
